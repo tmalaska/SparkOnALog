@@ -6,11 +6,11 @@ This project is intended to show examples of how to integrate Flume -> Spark Str
 ##Functionality
 There is a Main class in com.cloudera.sa.sparkonalog.  This class has the following functions:
 
-*SimpleFlumeAvroClient* : This is a very basic Flume Avro Client 
-*RandomWordEventFlumeAvroClient* : This is a very simple Flume Avro Client that sends two chars seperated by a spaced.  It is intended to be used to feed the word count examples.
-*HBaseCreateTable*: Creates to simple table for streaming counters to be persisted
-*SparkStreamingFromFlumeExample* : This is a simple Flume Client to Spark Streaming implementation that counts the number of flume events in the last window.
-*SparkStreamingFromFlumeToHBaseExample* : This does a word count on the flume events getting sent to it.  It will flush the word counts to HBase every N seconds.
+* *SimpleFlumeAvroClient* : This is a very basic Flume Avro Client 
+* *RandomWordEventFlumeAvroClient* : This is a very simple Flume Avro Client that sends two chars seperated by a spaced.  It is intended to be used to feed the word count examples.
+* *HBaseCreateTable*: Creates to simple table for streaming counters to be persisted
+* *SparkStreamingFromFlumeExample* : This is a simple Flume Client to Spark Streaming implementation that counts the number of flume events in the last window.
+* *SparkStreamingFromFlumeToHBaseExample* : This does a word count on the flume events getting sent to it.  It will flush the word counts to HBase every N seconds.
 
 ##Build
 mvn clean package
