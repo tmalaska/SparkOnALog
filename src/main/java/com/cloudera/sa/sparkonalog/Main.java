@@ -6,6 +6,7 @@ import com.cloudera.sa.sparkonalog.hbase.HBaseCreateTable;
 import com.cloudera.sa.sparkonalog.spark.streaming.job.basic.SparkStreamingFromFlumeExample;
 //import com.cloudera.sa.sparkonalog.spark.streaming.job.basic.SparkStreamingFromFlumeScalaExample;
 import com.cloudera.sa.sparkonalog.spark.streaming.job.wordcount.SparkStreamingFromFlumeToHBaseExample;
+import com.cloudera.sa.sparkonalog.spark.streaming.job.wordcount.SparkStreamingFromFlumeToHBaseWindowingExample;
 
 public class Main {
 	public static void main(String[] args) throws Exception {
@@ -25,12 +26,15 @@ public class Main {
 			RandomWordEventFlumeAvroClient.main(subArgs);
 		} else if (command.equals("HBaseCreateTable")) {
 			HBaseCreateTable.main(subArgs);
+			
 		} else if (command.equals("SparkStreamingFromFlumeExample")) {
 			SparkStreamingFromFlumeExample.main(subArgs);
 		} else if (command.equals("SparkStreamingFromFlumeScalaExample")) {
 			//SparkStreamingFromFlumeScalaExample.main(subArgs);
 		} else if (command.equals("SparkStreamingFromFlumeToHBaseExample")) {
 			SparkStreamingFromFlumeToHBaseExample.main(subArgs);
+		} else if (command.equals("SparkStreamingFromFlumeToHBaseWindowingExample")){ 
+			SparkStreamingFromFlumeToHBaseWindowingExample.main(subArgs);
 		} else {
 			outputHelp();
 		}

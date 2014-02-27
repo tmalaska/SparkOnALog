@@ -1,16 +1,13 @@
 package com.cloudera.sa.sparkonalog.spark.streaming.job.wordcount;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
@@ -19,16 +16,16 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.flume.FlumeUtils;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
 
-import com.cloudera.sa.sparkonalog.hbase.HBaseCounterIncrementor;
-import com.google.common.base.Optional;
-
 import scala.Tuple2;
+
+import com.cloudera.sa.sparkonalog.hbase.HBaseCounterIncrementor;
+//import com.cloudera.sa.sparkonalog.hbase.HBaseCounterIncrementor;
+import com.google.common.base.Optional;
 
 public class SparkStreamingFromFlumeToHBaseExample {
 
-	
 	public static void main(String[] args) {
-		if (args.length != 3) {
+		if (args.length == 0) {
 			System.err
 					.println("Usage: SparkStreamingFromFlumeToHBaseExample {master} {host} {port} {table} {columnFamily}");
 			System.exit(1);
@@ -43,16 +40,15 @@ public class SparkStreamingFromFlumeToHBaseExample {
 		Duration batchInterval = new Duration(2000);
 
 		JavaStreamingContext sc = new JavaStreamingContext(master,
-				"FlumeEventCount", batchInterval, System.getenv("SPARK_HOME"),
-				System.getenv("SPARK_EXAMPLES_JAR"));
+				"FlumeEventCount", batchInterval,
+				System.getenv("SPARK_HOME"), "/home/cloudera/SparkOnALog.jar");
 		
 		final Broadcast<String> broadcastTableName = sc.sparkContext().broadcast(tableName);
 		final Broadcast<String> broadcastColumnFamily = sc.sparkContext().broadcast(columnFamily);
 		
+		//JavaDStream<SparkFlumeEvent> flumeStream = sc.flumeStream(host, port);
 		
-
-		JavaDStream<SparkFlumeEvent> flumeStream = FlumeUtils.createStream(sc,
-				"localhost", 1234);
+		JavaDStream<SparkFlumeEvent> flumeStream = FlumeUtils.createStream(sc, host, port);
 		
 		JavaPairDStream<String, Integer> lastCounts = flumeStream
 				.flatMap(new FlatMapFunction<SparkFlumeEvent, String>() {
@@ -94,10 +90,9 @@ public class SparkStreamingFromFlumeToHBaseExample {
 								HBaseCounterIncrementor incrementor = 
 										HBaseCounterIncrementor.getInstance(broadcastTableName.value(), broadcastColumnFamily.value());
 								incrementor.incerment("Counter", tuple._1(), tuple._2());
+								System.out.println("Counter:" + tuple._1() + "," + tuple._2());
 								
 							}} );
-						
-						//
 						
 						return null;
 					}});

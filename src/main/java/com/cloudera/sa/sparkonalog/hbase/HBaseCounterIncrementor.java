@@ -25,6 +25,7 @@ public class HBaseCounterIncrementor {
 	static CloserThread closerThread;
 	static FlushThread flushThread;
 	static HashMap<String, CounterMap> rowKeyCounterMap = new HashMap<String, CounterMap>(); 
+	static Object locker = new Object();
 	
 	private HBaseCounterIncrementor(String tableName, String columnFamily) {
 		HBaseCounterIncrementor.tableName = tableName;
@@ -32,30 +33,35 @@ public class HBaseCounterIncrementor {
 	}
 	
 	public static HBaseCounterIncrementor getInstance(String tableName, String columnFamily) {
-		synchronized(singleton) {
-			if (singleton == null) {
-				singleton = new HBaseCounterIncrementor(tableName, columnFamily);
-				initialize();
+		
+		if (singleton == null) {
+			synchronized(locker) {
+				if (singleton == null) {
+					singleton = new HBaseCounterIncrementor(tableName, columnFamily);
+					initialize();
+				}
 			}
 		}
 		return singleton;
 	}
 	
 	private static void initialize() {
-		synchronized(hTable) {
-			if (hTable == null) {
-				Configuration hConfig = HBaseConfiguration.create();
-				try {
-					hTable = new HTable(hConfig, tableName);
-					updateLastUsed();
-					
-				} catch (IOException e) {
-					throw new RuntimeException(e);
+		if (hTable == null) {
+			synchronized(locker) {
+				if (hTable == null) {
+					Configuration hConfig = HBaseConfiguration.create();
+					try {
+						hTable = new HTable(hConfig, tableName);
+						updateLastUsed();
+						
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+					flushThread = new FlushThread(flushInterval);
+					flushThread.start();
+					closerThread = new CloserThread();
+					closerThread.start();
 				}
-				flushThread = new FlushThread(flushInterval);
-				flushThread.start();
-				closerThread = new CloserThread();
-				closerThread.start();
 			}
 		}
 	}
@@ -72,9 +78,7 @@ public class HBaseCounterIncrementor {
 		}
 		counterMap.increment(key, increment);
 		
-		if (hTable == null) {
-			initialize();
-		}
+		initialize();
 	}
 	
 	private static void updateLastUsed() {
@@ -83,18 +87,22 @@ public class HBaseCounterIncrementor {
 	
 	
 	protected void close() {
-		synchronized(hTable) {
-			if (hTable != null && System.currentTimeMillis() - lastUsed > 30000 ) {
-				flushThread.stopLoop();
-				flushThread = null;
-				try {
-					hTable.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		if (hTable != null) {
+			synchronized(locker) {
+				if (hTable != null) {
+					if (hTable != null && System.currentTimeMillis() - lastUsed > 30000 ) {
+						flushThread.stopLoop();
+						flushThread = null;
+						try {
+							hTable.close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		
+						hTable = null;
+					}
 				}
-
-				hTable = null;
 			}
 		}
 	}
@@ -164,12 +172,16 @@ public class HBaseCounterIncrementor {
 		
 					Increment increment = new Increment(Bytes.toBytes(entry.getKey()));
 		
+					boolean hasColumns = false;
 					for (Entry<String, Counter> entry2 : pastCounterMap.entrySet()) {
 						increment.addColumn(Bytes.toBytes(columnFamily),
 								Bytes.toBytes(entry2.getKey()), entry2.getValue().value);
+						hasColumns = true;
 					}
-					updateLastUsed();
-					hTable.increment(increment);
+					if (hasColumns) {
+						updateLastUsed();
+						hTable.increment(increment);
+					}
 				}
 				updateLastUsed();
 			}
@@ -179,5 +191,6 @@ public class HBaseCounterIncrementor {
 			continueLoop = false;
 		}
 	}
+		
 		
 }

@@ -2,14 +2,14 @@ package com.cloudera.sa.sparkonalog.hbase;
 
 
 import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.io.hfile.Compression;
-import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
-import org.apache.hadoop.hbase.regionserver.StoreFile.BloomType;
+import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.io.compress.Compression;
 
 public class HBaseCreateTable {
 	public static void main(String[] args) throws IOException {
@@ -34,7 +34,7 @@ public class HBaseCreateTable {
 
 		tableDescriptor.addFamily(columnDescriptor);
 
-		tableDescriptor.setValue(tableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
+		//tableDescriptor.setValue(tableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
 
 		System.out.println("-Creating Table");
 		admin.createTable(tableDescriptor);

@@ -19,33 +19,44 @@ public class SparkStreamingFromFlumeExample {
 		String host = args[1];
 		int port = Integer.parseInt(args[2]);
 
-		Duration batchInterval = new Duration(2000);
+		
+		Duration batchInterval = new Duration(5000);
 
-		System.out.println("Starting Spark Context");
+		System.out.println("-Starting Spark Context");
+		System.out.println("-Spark_home:" + System.getenv("SPARK_HOME"));
 		
 		JavaStreamingContext sc = new JavaStreamingContext(master,
-				"FlumeEventCount", batchInterval, master, "./SparkOnALog.jar");
+				"FlumeEventCount", batchInterval,
+				System.getenv("SPARK_HOME"), "/home/cloudera/SparkOnALog.jar");
 
 		//sc.ssc()
 		
 		//JavaDStream<SparkFlumeEvent> flumeStream = sc.flumeStream("localhost",
 		//		port);
 
-		JavaDStream<SparkFlumeEvent> flumeStream = FlumeUtils.createStream(sc, "localhost", 1234);
+		System.out.println("-Setting up Flume Stream: " + host + " " + port);
+		
+		//JavaDStream<SparkFlumeEvent> flumeStream = sc.flumeStream(host, port);
+		
+		JavaDStream<SparkFlumeEvent> flumeStream = FlumeUtils.createStream(sc, host, port);
 		
 		//flumeStream.count();
 
+		System.out.println("-count.map");
+		
+		flumeStream.count().print();
+		
 		flumeStream.count().map(new Function<Long, String>() {
 			@Override
 			public String call(Long in) {
-				return "Received " + in + " flume events.";
+				return "????????????? Received " + in + " flume events.";
 			}
 		}).print();
 
-		System.out.println("Starting Spark Context");
+		System.out.println("-Starting Spark Context");
 		
 		sc.start();
 		
-		System.out.println("Finished");
+		System.out.println("-Finished");
 	}
 }
